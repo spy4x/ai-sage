@@ -288,19 +288,13 @@
       class="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24"
     >
       <div class="mx-auto w-full max-w-sm lg:w-96">
-        <div>
-          <h2 class="mt-6 text-3xl font-medium tracking-tight">Sign in to your account</h2>
-        </div>
-
         <div class="mt-8">
           <div>
             <div>
-              <p class="text-sm font-medium leading-6">Sign in with</p>
-
               <div class="mt-2 grid grid-cols-1 gap-3">
                 <div>
                   <a
-                    href="#"
+                    href="javascript:;"
                     on:click={authStore.signInWithGoogle}
                     class="inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 hover:opacity-80 focus:outline-offset-0 transition-opacity"
                   >
