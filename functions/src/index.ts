@@ -1,4 +1,4 @@
-import { firestore } from 'firebase-functions';
+import * as functions from 'firebase-functions';
 import { FieldValue, Firestore } from '@google-cloud/firestore';
 import { Configuration, OpenAIApi } from 'openai';
 
@@ -13,14 +13,14 @@ interface Message {
   content: string;
 }
 
-interface Chat {
-  id: string;
-  title: string;
-  isAnswering: boolean;
-  messages: Message[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+// interface Chat {
+//   id: string;
+//   title: string;
+//   isAnswering: boolean;
+//   messages: Message[];
+//   createdAt: Date;
+//   updatedAt: Date;
+// }
 
 async function getAnswer(messages: Message[]) {
   const response = await openai.createChatCompletion({
@@ -34,8 +34,10 @@ async function getAnswer(messages: Message[]) {
   return message.content;
 }
 
-export const answer = firestore
-  .document('users/{userId}/chats/{chatId}')
+export const answer = functions
+  .region('europe-west1')
+  .runWith({ maxInstances: 5 })
+  .firestore.document('users/{userId}/chats/{chatId}')
   .onUpdate(async (snapshot, context) => {
     const chat = snapshot.after.data();
     const { userId, chatId } = context.params;

@@ -37,7 +37,6 @@
   "type": "module",
   "dependencies": {
     "firebase": "^9.19.1",
-    "firebase-admin": "^11.6.0",
-    "openai": "^3.2.1"
+    "firebase-admin": "^11.6.0"
   }
 }
