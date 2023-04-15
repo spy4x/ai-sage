@@ -11,6 +11,7 @@ const db = new Firestore();
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  responseTime?: number;
 }
 
 // interface Chat {
@@ -52,32 +53,44 @@ export const answer = functions
       return;
     }
 
-    const [content, title] = await Promise.all([
-      getAnswer(messagesAfter),
-      messagesAfter.length === 1
-        ? getAnswer([
-            { role: 'user', content: messagesAfter[0].content },
-            { role: 'user', content: 'Give my previous message a title. Max 5 words. No quotes' },
-          ])
-        : undefined,
-    ]);
-    console.log('answer', content);
-    const doc = db.doc(`users/${userId}/chats/${chatId}`);
-    const update = {
-      messages: FieldValue.arrayUnion({
-        role: 'assistant',
-        content,
-      }),
-      isAnswering: false,
-      updatedAt: FieldValue.serverTimestamp(),
-      title: chat.title,
-    };
-    if (title) {
-      update.title = title;
+    try {
+      const startTime = Date.now();
+      const [content, title] = await Promise.all([
+        getAnswer(messagesAfter.map(message => ({ role: message.role, content: message.content }))),
+        messagesAfter.length === 1
+          ? getAnswer([
+              { role: 'user', content: messagesAfter[0].content },
+              { role: 'user', content: 'Give my previous message a title. Max 5 words. No quotes' },
+            ])
+          : undefined,
+      ]);
+      const responseTime = Date.now() - startTime;
+      const doc = db.doc(`users/${userId}/chats/${chatId}`);
+      const update = {
+        messages: FieldValue.arrayUnion({
+          role: 'assistant',
+          content,
+          responseTime,
+        }),
+        isAnswering: false,
+        updatedAt: FieldValue.serverTimestamp(),
+        title: chat.title,
+      };
+      if (title) {
+        update.title = title;
+      }
+      console.log('update', {
+        title,
+        responseTime,
+        question: messagesAfter[messagesAfter.length - 1].content,
+        answer: content,
+      });
+      await doc.update(update);
+    } catch (error: unknown) {
+      if ((error as any).isAxiosError) {
+        console.error((error as any).response.data);
+      } else {
+        console.error(error);
+      }
     }
-    console.log('update', {
-      answer: content,
-      title,
-    });
-    await doc.update(update);
   });

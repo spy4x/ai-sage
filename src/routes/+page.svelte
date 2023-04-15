@@ -1,8 +1,44 @@
 <script lang="ts">
   import { authStore } from '$lib/client/auth.store';
-  import { chatStore } from '$lib/client/chat.store';
+  import { chatStore, type Chat } from '$lib/client/chat.store';
 
   let message = '';
+  let messageInput: HTMLInputElement;
+  let messagesContainer: HTMLDivElement;
+  function focus() {
+    messageInput.focus();
+  }
+
+  function select(chat: Chat) {
+    chatStore.select(chat.id);
+    focus();
+  }
+
+  async function create() {
+    await chatStore.create(`Chat #${$chatStore.chats.length + 1}`);
+    focus();
+  }
+
+  // formatter that converts a number like "1000000" to "1,000,000"
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'decimal',
+    maximumFractionDigits: 0,
+  });
+  function formatDuration(ms: number) {
+    // format as seconds if the value is greater than 1 second
+    if (ms > 1000) {
+      return `${Math.round(ms / 1000)} sec`;
+    }
+    // otherwise, format as milliseconds
+    return `${formatter.format(ms)} ms`;
+  }
+
+  // if $chatStore.selectedChat.messages.length changed - scroll page to the bottom
+  $: if ($chatStore.selectedChat?.messages.length && messagesContainer) {
+    // scroll should be smooth
+    messagesContainer.style.scrollBehavior = 'smooth';
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
 </script>
 
 {#if $authStore.user}
@@ -10,15 +46,17 @@
     <!-- Static sidebar for desktop -->
     <aside class="hidden xl:fixed xl:inset-y-0 xl:z-50 xl:flex xl:w-72 xl:flex-col">
       <!-- Sidebar component, swap this element with another sidebar if you like -->
-      <div class="flex grow flex-col pt-5 gap-y-5 overflow-y-auto bg-black/10 px-4 ring-1 ring-white/5">
+      <div
+        class="flex grow flex-col pt-5 gap-y-5 overflow-y-auto bg-black/10 px-4 ring-1 ring-white/5"
+      >
         <nav class="flex flex-1 flex-col">
           <ul role="list" class="flex flex-1 flex-col gap-y-7">
             {#if $chatStore.isLoadingChats}
               <div class="animate-pulse flex space-x-4">
                 <div class="flex-1 space-y-4 py-1">
-                  <div class="h-4 bg-slate-700 rounded"></div>
-                  <div class="h-4 bg-slate-700 rounded"></div>
-                  <div class="h-4 bg-slate-700 rounded"></div>
+                  <div class="h-4 bg-slate-700 rounded" />
+                  <div class="h-4 bg-slate-700 rounded" />
+                  <div class="h-4 bg-slate-700 rounded" />
                 </div>
               </div>
             {:else}
@@ -31,41 +69,97 @@
               {#if $chatStore.chats.length === 0}
                 <p class="text-gray-400 text-sm leading-6 font-medium">No chats yet</p>
               {:else}
-
                 <li>
                   <div class="text-xs font-medium leading-6 text-gray-400">Your chats</div>
                   <ul role="list" class="-mx-2 mt-2 space-y-1">
                     {#each $chatStore.chats as chat}
-                    <li>
-                      <!-- Current: "bg-gray-800 text-white" -->
-                      <a href="javascript:"
-                         class="{chat.id === $chatStore.selectedChatId ? 'bg-gray-800 text-white' : '' } text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-medium"
-                         on:click={() => chatStore.select(chat.id)}>
-                        <span class="truncate">{chat.title}</span>
+                      <li>
+                        <!-- Current: "bg-gray-800 text-white" -->
+                        <a
+                          href="javascript:"
+                          class="{chat.id === $chatStore.selectedChatId
+                            ? 'bg-gray-800 text-white'
+                            : ''} text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-medium"
+                          on:click={() => select(chat)}
+                        >
+                          <span class="truncate">{chat.title}</span>
 
-                        <button on:click={void chatStore.remove(chat)} class="ml-auto text-gray-400 hover:text-white">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </a>
-                    </li>
+                          <button
+                            on:click={void chatStore.remove(chat)}
+                            class="ml-auto text-gray-400 hover:text-white"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              class="h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              stroke-width="2"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </a>
+                      </li>
                     {/each}
                   </ul>
                 </li>
               {/if}
             {/if}
             <li class="-mx-6 mt-auto">
-              <div class="flex items-center gap-x-4 px-5 py-3 text-sm font-medium leading-6 text-white hover:bg-gray-800">
-                <img class="h-10 w-10 rounded-full bg-gray-800"
-                     src={$authStore.user.photoURL || '/icons/user.svg'}
-                     alt={$authStore.user.title}>
+              <div
+                class="flex items-center gap-x-4 px-5 py-3 text-sm font-medium leading-6 text-white hover:bg-gray-800"
+              >
+                {#if $authStore.user.photoURL}
+                  <img
+                    class="h-10 w-10 rounded-full bg-gray-800"
+                    src={$authStore.user.photoURL}
+                    alt={$authStore.user.title}
+                  />
+                {:else}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="feather feather-user h-10 w-10 rounded-full bg-white text-black"
+                    ><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle
+                      cx="12"
+                      cy="7"
+                      r="4"
+                    /></svg
+                  >
+                {/if}
                 <span class="sr-only">Your profile</span>
                 <span aria-hidden="true">{$authStore.user.title}</span>
 
-                <a href="/" class="ml-auto text-gray-400 hover:text-white" on:click={authStore.signOut}>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                <a
+                  href="/"
+                  class="ml-auto text-gray-400 hover:text-white"
+                  on:click={authStore.signOut}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
                   </svg>
                 </a>
               </div>
@@ -77,20 +171,57 @@
 
     <div class="xl:pl-72">
       <main>
-
         {#if $chatStore.selectedChat}
           <div class="h-screen px-10 py-6 grid grid-rows-[1fr_auto] gap-4">
-            <div class="overflow-hidden overflow-y-scroll">
-              {#each $chatStore.selectedChat.messages as message}
-                <div class="{message.role === 'assistant' ? 'bg-gray-800/70' : '' } py-2 px-3 max-w-2xl mx-auto rounded">
-                  <p><span class="font-medium">{message.role}</span>: {message.content}</p>
+            <div bind:this={messagesContainer} class="overflow-hidden overflow-y-scroll">
+              {#if $chatStore.selectedChat.messages.length}
+                {#each $chatStore.selectedChat.messages as message}
+                  <div
+                    class="{message.role === 'assistant'
+                      ? 'bg-gray-800/70'
+                      : ''} py-2 px-3 max-w-2xl mx-auto rounded"
+                  >
+                    <p><span class="font-medium">{message.role}</span>: {message.content}</p>
+                    {#if message.responseTime}
+                      <p class="text-xs text-slate-300">
+                        {formatDuration(message.responseTime)}
+                      </p>
+                    {/if}
+                  </div>
+                {/each}
+              {:else}
+                <div
+                  class="mx-auto mt-12 max-w-lg text-center p-12 rounded border border-dashed border-gray-500"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="mx-auto h-12 w-12 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  <h3 class="mt-2 text-sm font-medium text-gray-100">
+                    Ask your question using input below
+                  </h3>
+                  <div class="mt-6">
+                    <button on:click={focus} class="btn-secondary w-auto">
+                      Focus on the input
+                    </button>
+                  </div>
                 </div>
-              {/each}
+              {/if}
               {#if $chatStore.isCreatingMessage || $chatStore.selectedChat.isAnswering}
                 <div class="animate-pulse flex space-x-4 py-2 px-3 max-w-2xl mx-auto">
                   <div class="flex-1 space-y-3 py-1">
-                    <div class="h-5 bg-slate-700 rounded"></div>
-                    <div class="h-5 bg-slate-700 rounded"></div>
+                    <div class="h-5 bg-slate-700 rounded" />
+                    <div class="h-5 bg-slate-700 rounded" />
                   </div>
                 </div>
               {/if}
@@ -100,11 +231,19 @@
               <div class="max-w-3xl mx-auto">
                 <form
                   on:submit|preventDefault={() => {
-                    $chatStore.selectedChatId && chatStore.message($chatStore.selectedChatId, message);
+                    $chatStore.selectedChatId &&
+                      chatStore.message($chatStore.selectedChatId, message);
                     message = '';
                   }}
                 >
-                  <input type="text" bind:value={message} class="input" placeholder="Your message">
+                  <input
+                    type="text"
+                    autofocus
+                    bind:value={message}
+                    bind:this={messageInput}
+                    class="input"
+                    placeholder="Your message"
+                  />
                 </form>
               </div>
             </div>
@@ -112,21 +251,27 @@
         {/if}
 
         {#if $chatStore.chats.length === 0}
-          <div class="mx-auto mt-12 max-w-lg text-center p-12 rounded border border-dashed border-gray-500">
-            <svg xmlns="http://www.w3.org/2000/svg"
-                 class="mx-auto h-12 w-12 text-gray-400"
-                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          <div
+            class="mx-auto mt-12 max-w-lg text-center p-12 rounded border border-dashed border-gray-500"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
             </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-100">No projects</h3>
+            <h3 class="mt-2 text-sm font-medium text-gray-100">No chats</h3>
             <p class="mt-1 text-sm text-gray-500">Get started by creating a new chat.</p>
             <div class="mt-6">
-              <button
-                on:click={void chatStore.create(`Chat #${$chatStore.chats.length + 1}`)}
-                class="btn-primary w-auto"
-              >
-                Create chat
-              </button>
+              <button on:click={create} class="btn-primary w-auto"> Create chat </button>
             </div>
           </div>
         {/if}
@@ -137,11 +282,11 @@
       </main>
     </div>
   </div>
-
-
 {:else}
   <div class="flex min-h-full">
-    <div class="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
+    <div
+      class="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24"
+    >
       <div class="mx-auto w-full max-w-sm lg:w-96">
         <div>
           <h2 class="mt-6 text-3xl font-medium tracking-tight">Sign in to your account</h2>
@@ -154,9 +299,11 @@
 
               <div class="mt-2 grid grid-cols-1 gap-3">
                 <div>
-                  <!-- Sign in with google button -->
-                  <a href="#" on:click={authStore.signInWithGoogle}
-                     class="inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 hover:opacity-80 focus:outline-offset-0 transition-opacity">
+                  <a
+                    href="#"
+                    on:click={authStore.signInWithGoogle}
+                    class="inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 hover:opacity-80 focus:outline-offset-0 transition-opacity"
+                  >
                     Sign in with Google
                   </a>
                 </div>
@@ -167,7 +314,11 @@
       </div>
     </div>
     <div class="relative hidden w-0 flex-1 lg:block">
-      <img class="absolute inset-0 h-full w-full object-cover" src="https://picsum.photos/id/29/1400" alt="">
+      <img
+        class="absolute inset-0 h-full w-full object-cover"
+        src="https://picsum.photos/id/29/1400"
+        alt=""
+      />
     </div>
   </div>
 {/if}

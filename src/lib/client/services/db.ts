@@ -15,15 +15,16 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { firebaseApp } from './firebaseApp';
+import { env } from '$env/dynamic/public';
 import { dev } from '$app/environment';
 
 export { arrayUnion } from 'firebase/firestore';
 
 export const db = getFirestore(firebaseApp);
-// if (dev && !(db as any)._settingsFrozen) {
-//   // https://stackoverflow.com/a/74723593/9967802
-//   connectFirestoreEmulator(db, 'localhost', 8080);
-// }
+if (dev && env.PUBLIC_FIREBASE_USE_EMULATOR && !(db as any)._settingsFrozen) {
+  // https://stackoverflow.com/a/74723593/9967802
+  connectFirestoreEmulator(db, 'localhost', 8080);
+}
 
 export async function add(path: string, data: any): Promise<string> {
   const col = collection(db, path);

@@ -1,13 +1,14 @@
-import { derived, writable } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 import { add, arrayUnion, update, subscribeToCollection, remove } from './services/db';
 import { authStore } from './auth.store';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  responseTime?: number;
 }
 
-interface Chat {
+export interface Chat {
   id: string;
   isAnswering: boolean;
   title: string;
@@ -133,6 +134,9 @@ export const chatStore = {
   },
   remove: async (chat: Chat): Promise<void> => {
     const path = getChatIdPath(userId, chat.id);
+    if (chat.id === get(chatStore).selectedChatId) {
+      chatStore.select(undefined);
+    }
     await remove(path);
   },
   select: (chatId: undefined | string): void => {
