@@ -17,7 +17,7 @@
           class="w-12 h-12 rounded-full"
         />
         <div>
-          <p class="font-bold">
+          <p class="font-medium">
             {$authStore.user.title}
           </p>
         </div>
@@ -39,7 +39,7 @@
         {:else}
           <ul>
             {#each $chatStore.chats as chat}
-              <li class:font-bold={chat.id === $chatStore.selectedChatId}>
+              <li class:font-medium={chat.id === $chatStore.selectedChatId}>
                 <a href="javascript:;" class="underline" on:click={() => chatStore.select(chat.id)}>
                   {chat.title}
                 </a>
@@ -62,7 +62,7 @@
         >
 
         {#each $chatStore.selectedChat.messages as message}
-          <p><span class="font-bold">{message.role}</span>: {message.content}</p>
+          <p><span class="font-medium">{message.role}</span>: {message.content}</p>
         {/each}
         {#if $chatStore.isCreatingMessage || $chatStore.selectedChat.isAnswering}
           <p>...awaiting answer...</p>
@@ -92,9 +92,34 @@
     </main>
   </div>
 {:else}
-  <p>Not logged in</p>
-  <!-- Sign in with google button -->
-  <button on:click={authStore.signInWithGoogle} class="border bg-slate-200 p-3"
-    >Sign in with Google</button
-  >
+  <div class="flex min-h-full">
+    <div class="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
+      <div class="mx-auto w-full max-w-sm lg:w-96">
+        <div>
+          <h2 class="mt-6 text-3xl font-medium tracking-tight">Sign in to your account</h2>
+        </div>
+
+        <div class="mt-8">
+          <div>
+            <div>
+              <p class="text-sm font-medium leading-6">Sign in with</p>
+
+              <div class="mt-2 grid grid-cols-1 gap-3">
+                <div>
+                  <!-- Sign in with google button -->
+                  <a href="#" on:click={authStore.signInWithGoogle}
+                     class="inline-flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 hover:opacity-80 focus:outline-offset-0 transition-opacity">
+                    Sign in with Google
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="relative hidden w-0 flex-1 lg:block">
+      <img class="absolute inset-0 h-full w-full object-cover" src="https://picsum.photos/id/29/1400" alt="">
+    </div>
+  </div>
 {/if}

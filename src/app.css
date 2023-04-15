@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-.firebase-emulator-warning {
-  display: none;
+@layer base {
+  html {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+@layer utilities {
+  .firebase-emulator-warning {
+    display: none;
+  }
 }

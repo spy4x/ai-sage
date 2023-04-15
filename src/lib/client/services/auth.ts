@@ -13,9 +13,9 @@ import { firebaseApp } from './firebaseApp';
 
 const auth = getAuth(firebaseApp);
 
-if (dev) {
-  connectAuthEmulator(auth, 'http://localhost:9099');
-}
+// if (dev) {
+//   connectAuthEmulator(auth, 'http://localhost:9099');
+// }
 
 export async function signUp(email: string, password: string): Promise<void> {
   try {
