@@ -6,91 +6,139 @@
 </script>
 
 {#if $authStore.user}
-  <div class="container flex gap-6">
-    <!-- #region List of chats -->
-    <aside class="border-r-2 h-full p-6">
-      <!-- display user data from authStore - photoURL, display name || email || id -->
-      <div class="flex items-center gap-4">
-        <img
-          src={$authStore.user.photoURL || '/icons/user.svg'}
-          alt={$authStore.user.title}
-          class="w-12 h-12 rounded-full"
-        />
-        <div>
-          <p class="font-medium">
-            {$authStore.user.title}
-          </p>
-        </div>
-      </div>
-      <button on:click={authStore.signOut} class="border bg-slate-200 px-3">Sign out</button>
+  <div>
+    <!-- Static sidebar for desktop -->
+    <aside class="hidden xl:fixed xl:inset-y-0 xl:z-50 xl:flex xl:w-72 xl:flex-col">
+      <!-- Sidebar component, swap this element with another sidebar if you like -->
+      <div class="flex grow flex-col pt-5 gap-y-5 overflow-y-auto bg-black/10 px-4 ring-1 ring-white/5">
+        <nav class="flex flex-1 flex-col">
+          <ul role="list" class="flex flex-1 flex-col gap-y-7">
+            {#if $chatStore.isLoadingChats}
+              <div class="animate-pulse flex space-x-4">
+                <div class="flex-1 space-y-4 py-1">
+                  <div class="h-4 bg-slate-700 rounded"></div>
+                  <div class="h-4 bg-slate-700 rounded"></div>
+                  <div class="h-4 bg-slate-700 rounded"></div>
+                </div>
+              </div>
+            {:else}
+              <button
+                on:click={void chatStore.create(`Chat #${$chatStore.chats.length + 1}`)}
+                class="btn-secondary"
+              >
+                Create chat
+              </button>
+              {#if $chatStore.chats.length === 0}
+                <p class="text-gray-400 text-sm leading-6 font-medium">No chats yet</p>
+              {:else}
 
-      <h2 class="text-2xl">Chats</h2>
-      {#if $chatStore.isLoadingChats}
-        <p>Loading...</p>
-      {:else}
-        <button
-          on:click={void chatStore.create(`Chat #${$chatStore.chats.length + 1}`)}
-          class="border bg-green-700 px-3 text-white"
-        >
-          Create chat
-        </button>
-        {#if $chatStore.chats.length === 0}
-          <p>No chats yet</p>
-        {:else}
-          <ul>
-            {#each $chatStore.chats as chat}
-              <li class:font-medium={chat.id === $chatStore.selectedChatId}>
-                <a href="javascript:;" class="underline" on:click={() => chatStore.select(chat.id)}>
-                  {chat.title}
+                <li>
+                  <div class="text-xs font-medium leading-6 text-gray-400">Your chats</div>
+                  <ul role="list" class="-mx-2 mt-2 space-y-1">
+                    {#each $chatStore.chats as chat}
+                    <li>
+                      <!-- Current: "bg-gray-800 text-white" -->
+                      <a href="javascript:"
+                         class="{chat.id === $chatStore.selectedChatId ? 'bg-gray-800 text-white' : '' } text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-medium"
+                         on:click={() => chatStore.select(chat.id)}>
+                        <span class="truncate">{chat.title}</span>
+
+                        <button on:click={void chatStore.remove(chat)} class="ml-auto text-gray-400 hover:text-white">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </a>
+                    </li>
+                    {/each}
+                  </ul>
+                </li>
+              {/if}
+            {/if}
+            <li class="-mx-6 mt-auto">
+              <div class="flex items-center gap-x-4 px-5 py-3 text-sm font-medium leading-6 text-white hover:bg-gray-800">
+                <img class="h-10 w-10 rounded-full bg-gray-800"
+                     src={$authStore.user.photoURL || '/icons/user.svg'}
+                     alt={$authStore.user.title}>
+                <span class="sr-only">Your profile</span>
+                <span aria-hidden="true">{$authStore.user.title}</span>
+
+                <a href="/" class="ml-auto text-gray-400 hover:text-white" on:click={authStore.signOut}>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
                 </a>
-                <button on:click={void chatStore.remove(chat)} class="border px-2 bg-red-400"
-                  >x</button
-                >
-              </li>
-            {/each}
+              </div>
+            </li>
           </ul>
-        {/if}
-      {/if}
+        </nav>
+      </div>
     </aside>
-    <!-- #endregion -->
 
-    <!-- #region Selected chat -->
-    <main>
-      {#if $chatStore.selectedChat}
-        <button on:click={() => chatStore.select(undefined)} class="bg-gray-400"
-          >DE-SELECT this chat</button
-        >
+    <div class="xl:pl-72">
+      <main>
 
-        {#each $chatStore.selectedChat.messages as message}
-          <p><span class="font-medium">{message.role}</span>: {message.content}</p>
-        {/each}
-        {#if $chatStore.isCreatingMessage || $chatStore.selectedChat.isAnswering}
-          <p>...awaiting answer...</p>
+        {#if $chatStore.selectedChat}
+          <div class="h-screen px-10 py-6 grid grid-rows-[1fr_auto] gap-4">
+            <div class="overflow-hidden overflow-y-scroll">
+              {#each $chatStore.selectedChat.messages as message}
+                <div class="{message.role === 'assistant' ? 'bg-gray-800/70' : '' } py-2 px-3 max-w-2xl mx-auto rounded">
+                  <p><span class="font-medium">{message.role}</span>: {message.content}</p>
+                </div>
+              {/each}
+              {#if $chatStore.isCreatingMessage || $chatStore.selectedChat.isAnswering}
+                <div class="animate-pulse flex space-x-4 py-2 px-3 max-w-2xl mx-auto">
+                  <div class="flex-1 space-y-3 py-1">
+                    <div class="h-5 bg-slate-700 rounded"></div>
+                    <div class="h-5 bg-slate-700 rounded"></div>
+                  </div>
+                </div>
+              {/if}
+            </div>
+
+            <div>
+              <div class="max-w-3xl mx-auto">
+                <form
+                  on:submit|preventDefault={() => {
+                    $chatStore.selectedChatId && chatStore.message($chatStore.selectedChatId, message);
+                    message = '';
+                  }}
+                >
+                  <input type="text" bind:value={message} class="input" placeholder="Your message">
+                </form>
+              </div>
+            </div>
+          </div>
         {/if}
-        <form
-          on:submit|preventDefault={() => {
-            $chatStore.selectedChatId && chatStore.message($chatStore.selectedChatId, message);
-            message = '';
-          }}
-        >
-          <input type="text" bind:value={message} class="border-4" placeholder="Your message" />
-        </form>
-      {:else}
-        <p>Select chat on the left or create one</p>
-        <button
-          on:click={void chatStore.create(`Chat #${$chatStore.chats.length + 1}`)}
-          class="border bg-green-700 px-3 text-white"
-        >
-          Create chat
-        </button>
-      {/if}
-      <!-- #endregion -->
 
-      <!-- Uncomment next lines to debug state -->
-      <!-- <pre>{JSON.stringify($chatStore, null, 2)}</pre> -->
-      <!-- <pre>{JSON.stringify($authStore, null, 2)}</pre> -->
-    </main>
+        {#if $chatStore.chats.length === 0}
+          <div class="mx-auto mt-12 max-w-lg text-center p-12 rounded border border-dashed border-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 class="mx-auto h-12 w-12 text-gray-400"
+                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-100">No projects</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by creating a new chat.</p>
+            <div class="mt-6">
+              <button
+                on:click={void chatStore.create(`Chat #${$chatStore.chats.length + 1}`)}
+                class="btn-primary w-auto"
+              >
+                Create chat
+              </button>
+            </div>
+          </div>
+        {/if}
+
+        <!-- Uncomment next lines to debug state -->
+        <!-- <pre>{JSON.stringify($chatStore, null, 2)}</pre> -->
+        <!-- <pre>{JSON.stringify($authStore, null, 2)}</pre> -->
+      </main>
+    </div>
   </div>
+
+
 {:else}
   <div class="flex min-h-full">
     <div class="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
