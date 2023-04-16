@@ -227,7 +227,11 @@
                         {/if}
                         <span>{$authStore.user.title}</span>
                       {:else}
-                        <img src="/openai-sign.svg" alt="Assistant" class="h-8 w-8 inline-block" />
+                        <img
+                          src="/favicon.svg"
+                          alt="Assistant"
+                          class="h-8 w-8 inline-block bg-white rounded"
+                        />
                         <span class="text-xl">Sage</span>
                         {#if message.responseTime}
                           <span class="text-slate-300 text-xs mt-0.5">
