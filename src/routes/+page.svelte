@@ -325,11 +325,14 @@
                     autofocus
                     bind:value={message}
                     bind:this={messageInput}
-                    rows="3"
-                    class="input grow"
+                    rows="2"
+                    class="input grow min-h-[40px] max-h-80"
                     placeholder="Your message"
                     disabled={$chatStore.isCreatingMessage}
-                    on:keydown={e => e.key === 'Enter' && (e.metaKey || e.ctrlKey) && submit()}
+                    on:keydown={e =>
+                      e.key === 'Enter' &&
+                      !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) &&
+                      submit()}
                   />
 
                   <button
@@ -340,7 +343,6 @@
                       Sending...
                     {:else}
                       <span>Send</span>
-                      <span class="text-xs text-slate-200">{metaKey}+Enter</span>
                     {/if}
                   </button>
                 </form>
