@@ -11,16 +11,13 @@ const openai = new OpenAIApi(configuration);
 
 const db = new Firestore();
 
-console.log('Before marked.setOptions');
-
 // code highlighting
 marked.setOptions({
   highlight: function (code, language) {
+    if (!language) return code;
     return hljs.highlight(code, { language }).value;
   },
 });
-
-console.log('After marked.setOptions');
 // #endregion
 
 interface Message {
