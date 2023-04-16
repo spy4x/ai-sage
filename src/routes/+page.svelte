@@ -6,7 +6,7 @@
   let messageInput: HTMLInputElement;
   let messagesContainer: HTMLDivElement;
   function focus() {
-    messageInput.focus();
+    messageInput?.focus();
   }
 
   function select(chat: Chat) {
@@ -173,20 +173,97 @@
       <main>
         {#if $chatStore.selectedChat}
           <div class="h-screen px-10 py-6 grid grid-rows-[1fr_auto] gap-4">
-            <div bind:this={messagesContainer} class="overflow-hidden overflow-y-scroll">
+            <div
+              bind:this={messagesContainer}
+              class="messages-container overflow-hidden overflow-y-scroll"
+            >
               {#if $chatStore.selectedChat.messages.length}
-                {#each $chatStore.selectedChat.messages as message}
+                {#each $chatStore.selectedChat.messages as message, messageIndex}
                   <div
                     class="{message.role === 'assistant'
                       ? 'bg-gray-800/70'
-                      : ''} py-2 px-3 max-w-2xl mx-auto rounded"
+                      : ''} py-2 px-3 max-w-2xl mx-auto rounded mb-5"
                   >
-                    <p><span class="font-medium">{message.role}</span>: {message.content}</p>
-                    {#if message.responseTime}
-                      <p class="text-xs text-slate-300">
-                        {formatDuration(message.responseTime)}
-                      </p>
-                    {/if}
+                    <div class="flex items-center gap-2 mb-2">
+                      {#if message.role === 'user'}
+                        {#if $authStore.user.photoURL}
+                          <img
+                            class="h-8 w-8 inline-block rounded-full"
+                            src={$authStore.user.photoURL}
+                            alt={$authStore.user.title}
+                          />
+                        {:else}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="feather feather-user h-8 w-8 inline-block rounded-full bg-white text-black"
+                            ><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle
+                              cx="12"
+                              cy="7"
+                              r="4"
+                            /></svg
+                          >
+                        {/if}
+                        <span>{$authStore.user.title}</span>
+                      {:else}
+                        <img src="/openai-sign.svg" alt="Assistant" class="h-8 w-8 inline-block" />
+                        <span class="text-xl">Sage</span>
+                        {#if message.responseTime}
+                          <span class="text-slate-300 text-xs mt-0.5">
+                            {formatDuration(message.responseTime)}
+                          </span>
+                        {/if}
+                      {/if}
+                      <button
+                        title="Delete message"
+                        class="ml-auto"
+                        on:click={() =>
+                          $chatStore.selectedChat &&
+                          chatStore.removeMessage($chatStore.selectedChat, messageIndex)}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-6 w-6 text-slate-400 hover:text-red-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                    <div class="message">
+                      {#if message.role === 'assistant'}
+                        {@html message.content}
+                      {:else}
+                        <p>{message.content}</p>
+                      {/if}
+
+                      {#if message.isFlagged}
+                        <div class="mt-2 border border-red-500 text-red-500 rounded p-3">
+                          ⚠️ This message was flagged as inappropriate. Please delete it and ask
+                          something else.
+                          <button
+                            on:click={() =>
+                              $chatStore.selectedChat &&
+                              chatStore.removeMessage($chatStore.selectedChat, messageIndex)}
+                            class="btn-danger w-32 block mt-3">Delete</button
+                          >
+                        </div>
+                      {/if}
+                    </div>
                   </div>
                 {/each}
               {:else}

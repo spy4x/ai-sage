@@ -6,6 +6,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   responseTime?: number;
+  isFlagged: boolean;
 }
 
 export interface Chat {
@@ -138,6 +139,16 @@ export const chatStore = {
       chatStore.select(undefined);
     }
     await remove(path);
+  },
+  removeMessage: async (chat: Chat, messageIndex: number): Promise<void> => {
+    const path = getChatIdPath(userId, chat.id);
+    const messages = [...chat.messages];
+    messages.splice(messageIndex, 1);
+    const chatUpdate = {
+      messages,
+      updatedAt: new Date(),
+    };
+    await update(path, chatUpdate);
   },
   select: (chatId: undefined | string): void => {
     updateState({ selectedChatId: chatId });
