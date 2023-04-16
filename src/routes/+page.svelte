@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { browser } from '$app/environment';
   import { authStore } from '$lib/client/auth.store';
   import { chatStore, type Chat } from '$lib/client/chat.store';
+  import { get } from 'svelte/store';
 
   let message = '';
-  let messageInput: HTMLInputElement;
+  let messageInput: HTMLTextAreaElement;
   let messagesContainer: HTMLDivElement;
+  const metaKey = browser && window.navigator.platform.includes('Mac') ? '⌘' : 'Ctrl';
   function focus() {
     messageInput?.focus();
   }
@@ -31,6 +34,17 @@
     }
     // otherwise, format as milliseconds
     return `${formatter.format(ms)} ms`;
+  }
+
+  function submit() {
+    const state = get(chatStore);
+    message = message.trim();
+    if (state.selectedChatId && message) {
+      // replace "\n" with "<br>" to preserve line breaks
+      message = message.replace(/\n/g, '<br/>');
+      chatStore.message(state.selectedChatId, message);
+      message = '';
+    }
   }
 
   // if $chatStore.selectedChat.messages.length changed - scroll page to the bottom
@@ -245,11 +259,7 @@
                       </button>
                     </div>
                     <div class="message">
-                      {#if message.role === 'assistant'}
-                        {@html message.content}
-                      {:else}
-                        <p>{message.content}</p>
-                      {/if}
+                      {@html message.content}
 
                       {#if message.isFlagged}
                         <div class="mt-2 border border-red-500 text-red-500 rounded p-3">
@@ -306,21 +316,29 @@
 
             <div>
               <div class="max-w-3xl mx-auto">
-                <form
-                  on:submit|preventDefault={() => {
-                    $chatStore.selectedChatId &&
-                      chatStore.message($chatStore.selectedChatId, message);
-                    message = '';
-                  }}
-                >
-                  <input
-                    type="text"
+                <form on:submit|preventDefault={submit} class="flex gap-2">
+                  <textarea
                     autofocus
                     bind:value={message}
                     bind:this={messageInput}
-                    class="input"
+                    rows="3"
+                    class="input grow"
                     placeholder="Your message"
+                    disabled={$chatStore.isCreatingMessage}
+                    on:keydown={e => e.key === 'Enter' && (e.metaKey || e.ctrlKey) && submit()}
                   />
+
+                  <button
+                    class="btn-primary w-20 shrink-0 flex-col items-center"
+                    disabled={!message || $chatStore.isCreatingMessage}
+                  >
+                    {#if $chatStore.isCreatingMessage}
+                      Sending...
+                    {:else}
+                      <span>Send</span>
+                      <span class="text-xs text-slate-200">{metaKey}+Enter</span>
+                    {/if}
+                  </button>
                 </form>
               </div>
             </div>
