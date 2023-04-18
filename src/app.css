@@ -61,7 +61,7 @@
   @apply text-2xl text-slate-50;
 }
 .message p {
-  @apply mb-4;
+  @apply mb-4 last:mb-0;
   @apply text-base font-normal;
 }
 .message ol,
@@ -73,7 +73,7 @@
 }
 .message ol li,
 .message ul li {
-  @apply mb-4;
+  @apply mb-4 last:mb-0;
 }
 .message ol {
   @apply list-decimal;
@@ -97,7 +97,7 @@
 }
 
 .message p > code {
-  @apply font-mono bg-orange-500 rounded py-0.5 px-1 text-orange-100 text-base;
+  @apply font-mono bg-gray-600 rounded py-0.5 px-1 text-gray-50 text-base;
 }
 
 @screen sm {

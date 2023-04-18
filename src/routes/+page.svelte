@@ -231,7 +231,7 @@
                       {#if message.role === 'user'}
                         {#if $authStore.user.photoURL}
                           <img
-                            class="h-8 w-8 inline-block rounded-full"
+                            class="h-10 w-10 inline-block rounded-full"
                             src={$authStore.user.photoURL}
                             alt={$authStore.user.title}
                           />
@@ -246,7 +246,7 @@
                             stroke-width="2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            class="feather feather-user h-8 w-8 inline-block rounded-full bg-white text-black"
+                            class="feather feather-user h-10 w-10 inline-block rounded-full bg-white text-black"
                             ><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle
                               cx="12"
                               cy="7"
@@ -259,7 +259,7 @@
                         <img
                           src="/favicon.svg"
                           alt="Assistant"
-                          class="h-8 w-8 inline-block bg-white rounded"
+                          class="h-10 w-10 inline-block bg-white rounded"
                         />
                         <span class="text-xl">Sage</span>
                         {#if message.responseTime}
@@ -345,8 +345,8 @@
                   </div>
                 </div>
               {/if}
-              <div data-e2e="scroll-to-margin" class="h-80" />
-              <div bind:this={scrollToBottomOfMessages} data-e2e="scroll-to-target" />
+              <div data-e2e="scroll-to-margin" class="h-80"></div>
+              <div bind:this={scrollToBottomOfMessages} data-e2e="scroll-to-target"></div>
             </div>
 
             <div>
