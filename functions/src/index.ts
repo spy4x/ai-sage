@@ -138,7 +138,7 @@ async function generateAnswer(messages: Message[], userId: string): Promise<stri
       {
         role: 'system',
         content:
-          'Answer using Markdown code. For code snippets correctly set programming language.',
+          'You are ChatGPT, a useful assistant. You answer using Markdown code. If you need to write programming code snippets - use correct Markdown format, like ```javascript alert("Hello World!") ```. That will make UI to render your answer nicely.',
       },
       ...messages.map(message => ({ role: message.role, content: message.content })),
     ],
