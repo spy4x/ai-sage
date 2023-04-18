@@ -7,6 +7,13 @@
   let message = '';
   let messageInput: HTMLTextAreaElement;
   let messagesContainer: HTMLDivElement;
+
+  let isMobileMenuOpen = false;
+
+  function toggle() {
+    isMobileMenuOpen = !isMobileMenuOpen;
+  }
+
   const metaKey = browser && window.navigator.platform.includes('Mac') ? '⌘' : 'Ctrl';
   function focus() {
     messageInput?.focus();
@@ -57,20 +64,31 @@
 
 {#if $authStore.user}
   <div>
-    <!-- Static sidebar for desktop -->
-    <aside class="hidden xl:fixed xl:inset-y-0 xl:z-50 xl:flex xl:w-72 xl:flex-col">
+<!--    #region Mobile menu-->
+    <div class="xl:hidden absolute top-0 inset-x-0 z-20 bg-gray-900 flex border-b border-white/5">
+      <button on:click={toggle} type="button" class="p-5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+<!--    #endregion Mobile menu-->
+    <!-- Sidebar -->
+    <aside class="{ isMobileMenuOpen ? 'fixed inset-0 z-10 bg-gray-900 pt-16 h-screen overflow-y-scroll flex flex-col' : 'hidden' }
+    xl:p-0 xl:bg-transparent xl:fixed xl:inset-y-0 xl:z-50 xl:flex xl:w-72 xl:flex-col"
+    >
       <!-- Sidebar component, swap this element with another sidebar if you like -->
       <div
-        class="flex grow flex-col pt-5 gap-y-5 overflow-y-auto bg-black/10 px-4 ring-1 ring-white/5"
+        class="h-full flex-1 flex flex-col pt-5 gap-y-5 overflow-y-auto bg-black/10 px-4 ring-1 ring-white/5"
       >
         <nav class="flex flex-1 flex-col">
-          <ul role="list" class="flex flex-1 flex-col gap-y-7">
+          <ul class="flex flex-1 flex-col gap-y-7">
             {#if $chatStore.isLoadingChats}
               <div class="animate-pulse flex space-x-4">
                 <div class="flex-1 space-y-4 py-1">
-                  <div class="h-4 bg-slate-700 rounded" />
-                  <div class="h-4 bg-slate-700 rounded" />
-                  <div class="h-4 bg-slate-700 rounded" />
+                  <div class="h-4 bg-slate-700 rounded"></div>
+                  <div class="h-4 bg-slate-700 rounded"></div>
+                  <div class="h-4 bg-slate-700 rounded"></div>
                 </div>
               </div>
             {:else}
@@ -85,7 +103,7 @@
               {:else}
                 <li>
                   <div class="text-xs font-medium leading-6 text-gray-400">Your chats</div>
-                  <ul role="list" class="-mx-2 mt-2 space-y-1">
+                  <ul class="-mx-2 mt-2 space-y-1">
                     {#each $chatStore.chats as chat}
                       <li>
                         <!-- Current: "bg-gray-800 text-white" -->
@@ -186,17 +204,17 @@
     <div class="xl:pl-72">
       <main>
         {#if $chatStore.selectedChat}
-          <div class="h-screen px-10 py-6 grid grid-rows-[1fr_auto] gap-4">
+          <div class="h-screen px-4 xl:px-10 pt-16 pb-6 xl:py-6 grid grid-rows-[1fr_auto] gap-4">
             <div
               bind:this={messagesContainer}
-              class="messages-container overflow-hidden overflow-y-scroll"
+              class="messages-container overflow-hidden overflow-y-scroll space-y-4"
             >
               {#if $chatStore.selectedChat.messages.length}
                 {#each $chatStore.selectedChat.messages as message, messageIndex}
                   <div
                     class="{message.role === 'assistant'
                       ? 'bg-gray-800/70'
-                      : ''} py-2 px-3 max-w-2xl mx-auto rounded mb-5"
+                      : ''} py-2 px-3 max-w-2xl mx-auto rounded"
                   >
                     <div class="flex items-center gap-2 mb-2">
                       {#if message.role === 'user'}
@@ -248,7 +266,7 @@
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          class="h-6 w-6 text-slate-400 hover:text-red-600"
+                          class="h-6 w-6 text-slate-400 hover:text-white"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -282,7 +300,7 @@
                 {/each}
               {:else}
                 <div
-                  class="mx-auto mt-12 max-w-lg text-center p-12 rounded border border-dashed border-gray-500"
+                  class="mx-4 lg:mx-auto mt-20 xl:mt-12 max-w-lg text-center p-12 rounded border border-dashed border-gray-500"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -311,8 +329,8 @@
               {#if $chatStore.isCreatingMessage || $chatStore.selectedChat.isAnswering}
                 <div class="animate-pulse flex space-x-4 py-2 px-3 max-w-2xl mx-auto">
                   <div class="flex-1 space-y-3 py-1">
-                    <div class="h-5 bg-slate-700 rounded" />
-                    <div class="h-5 bg-slate-700 rounded" />
+                    <div class="h-5 bg-slate-700 rounded"></div>
+                    <div class="h-5 bg-slate-700 rounded"></div>
                   </div>
                 </div>
               {/if}
@@ -332,8 +350,7 @@
                     on:keydown={e =>
                       e.key === 'Enter' &&
                       !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) &&
-                      submit()}
-                  />
+                      submit()}></textarea>
 
                   <button
                     class="btn-primary w-20 shrink-0 flex-col items-center"
@@ -353,7 +370,7 @@
 
         {#if $chatStore.chats.length === 0}
           <div
-            class="mx-auto mt-12 max-w-lg text-center p-12 rounded border border-dashed border-gray-500"
+            class="mx-4 lg:mx-auto mt-20 xl:mt-12 max-w-lg text-center p-12 rounded border border-dashed border-gray-500"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
