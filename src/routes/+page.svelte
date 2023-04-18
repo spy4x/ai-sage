@@ -6,7 +6,7 @@
 
   let message = '';
   let messageInput: HTMLTextAreaElement;
-  let messagesContainer: HTMLDivElement;
+  let scrollToBottomOfMessages: HTMLDivElement;
 
   let isMobileMenuOpen = false;
 
@@ -55,26 +55,40 @@
   }
 
   // if $chatStore.selectedChat.messages.length changed - scroll page to the bottom
-  $: if ($chatStore.selectedChat?.messages.length && messagesContainer) {
-    // scroll should be smooth
-    messagesContainer.style.scrollBehavior = 'smooth';
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  let lengthBefore = 0;
+  $: if (
+    scrollToBottomOfMessages &&
+    $chatStore.selectedChat?.messages.length &&
+    $chatStore.selectedChat?.messages.length !== lengthBefore
+  ) {
+    lengthBefore = $chatStore.selectedChat.messages.length;
+    scrollToBottomOfMessages.scrollIntoView({ behavior: 'smooth' });
   }
 </script>
 
 {#if $authStore.user}
   <div>
-<!--    #region Mobile menu-->
+    <!--    #region Mobile menu-->
     <div class="xl:hidden absolute top-0 inset-x-0 z-20 bg-gray-900 flex border-b border-white/5">
       <button on:click={toggle} type="button" class="p-5">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
     </div>
-<!--    #endregion Mobile menu-->
+    <!--    #endregion Mobile menu-->
     <!-- Sidebar -->
-    <aside class="{ isMobileMenuOpen ? 'fixed inset-0 z-10 bg-gray-900 pt-16 h-screen overflow-y-scroll flex flex-col' : 'hidden' }
+    <aside
+      class="{isMobileMenuOpen
+        ? 'fixed inset-0 z-10 bg-gray-900 pt-16 h-screen overflow-y-scroll flex flex-col'
+        : 'hidden'}
     xl:p-0 xl:bg-transparent xl:fixed xl:inset-y-0 xl:z-50 xl:flex xl:w-72 xl:flex-col"
     >
       <!-- Sidebar component, swap this element with another sidebar if you like -->
@@ -86,9 +100,9 @@
             {#if $chatStore.isLoadingChats}
               <div class="animate-pulse flex space-x-4">
                 <div class="flex-1 space-y-4 py-1">
-                  <div class="h-4 bg-slate-700 rounded"></div>
-                  <div class="h-4 bg-slate-700 rounded"></div>
-                  <div class="h-4 bg-slate-700 rounded"></div>
+                  <div class="h-4 bg-slate-700 rounded" />
+                  <div class="h-4 bg-slate-700 rounded" />
+                  <div class="h-4 bg-slate-700 rounded" />
                 </div>
               </div>
             {:else}
@@ -205,10 +219,7 @@
       <main>
         {#if $chatStore.selectedChat}
           <div class="h-screen px-4 xl:px-10 pt-16 pb-6 xl:py-6 grid grid-rows-[1fr_auto] gap-4">
-            <div
-              bind:this={messagesContainer}
-              class="messages-container overflow-hidden overflow-y-scroll space-y-4"
-            >
+            <div class="messages-container overflow-hidden overflow-y-scroll space-y-4">
               {#if $chatStore.selectedChat.messages.length}
                 {#each $chatStore.selectedChat.messages as message, messageIndex}
                   <div
@@ -329,11 +340,13 @@
               {#if $chatStore.isCreatingMessage || $chatStore.selectedChat.isAnswering}
                 <div class="animate-pulse flex space-x-4 py-2 px-3 max-w-2xl mx-auto">
                   <div class="flex-1 space-y-3 py-1">
-                    <div class="h-5 bg-slate-700 rounded"></div>
-                    <div class="h-5 bg-slate-700 rounded"></div>
+                    <div class="h-5 bg-slate-700 rounded" />
+                    <div class="h-5 bg-slate-700 rounded" />
                   </div>
                 </div>
               {/if}
+              <div data-e2e="scroll-to-margin" class="h-80" />
+              <div bind:this={scrollToBottomOfMessages} data-e2e="scroll-to-target" />
             </div>
 
             <div>
@@ -350,7 +363,8 @@
                     on:keydown={e =>
                       e.key === 'Enter' &&
                       !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) &&
-                      submit()}></textarea>
+                      submit()}
+                  />
 
                   <button
                     class="btn-primary w-20 shrink-0 flex-col items-center"
