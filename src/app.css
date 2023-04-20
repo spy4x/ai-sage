@@ -15,7 +15,7 @@
 @layer components {
   .btn-primary {
     @apply inline-flex w-full justify-center;
-    @apply rounded-md bg-orange-600 px-3 py-2;
+    @apply rounded-md bg-orange-600 px-3 py-2 border border-orange-600;
     @apply hover:opacity-80 focus:outline-offset-0 transition-opacity;
     @apply sm:text-sm sm:leading-6;
     @apply disabled:opacity-50;
@@ -67,7 +67,7 @@
 .message ol,
 .message ul {
   @apply my-2 mb-10;
-  @apply px-12;
+  @apply pl-6 lg:px-12;
   @apply text-lg font-normal;
   letter-spacing: 0.00625rem;
 }

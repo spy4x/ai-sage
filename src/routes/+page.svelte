@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" xmlns="http://www.w3.org/1999/html">
   import { browser } from '$app/environment';
   import { authStore } from '$lib/client/auth.store';
   import { chatStore, type Chat } from '$lib/client/chat.store';
@@ -345,7 +345,7 @@
                   </div>
                 </div>
               {/if}
-              <div data-e2e="scroll-to-margin" class="h-80"></div>
+              <div data-e2e="scroll-to-margin"></div>
               <div bind:this={scrollToBottomOfMessages} data-e2e="scroll-to-target"></div>
             </div>
 
@@ -356,22 +356,26 @@
                     autofocus
                     bind:value={message}
                     bind:this={messageInput}
-                    rows="2"
-                    class="input grow min-h-[40px] max-h-80"
+                    rows={1}
+                    class="input grow resize-none max-h-40 lg:max-h-60 2xl:max-h-80"
                     placeholder="Your message"
                     disabled={$chatStore.isCreatingMessage}
                     on:keydown={e =>
                       e.key === 'Enter' &&
                       !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) &&
                       submit()}
-                  />
+                    on:input={e => e.target.style.height = `${e.target.scrollHeight + 2}px`}
+                    ></textarea>
 
                   <button
-                    class="btn-primary w-20 shrink-0 flex-col items-center"
+                    class="btn-primary shrink-0 w-16 sm:w-20 self-end"
                     disabled={!message || $chatStore.isCreatingMessage}
                   >
                     {#if $chatStore.isCreatingMessage}
-                      Sending...
+                      <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
                     {:else}
                       <span>Send</span>
                     {/if}
