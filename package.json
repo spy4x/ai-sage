@@ -15,7 +15,8 @@
     "---Firebase-Emulators---": "",
     "//finds Firestore emulator PID and kills it": "",
     "emulator:kill": "lsof -n -i4TCP:8080 | grep LISTEN | awk '{ print $2 }' | xargs kill",
-    "emulator": "pnpm emulator:kill && firebase emulators:start"
+    "emulator": "pnpm emulator:kill && firebase emulators:start",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^2.0.2",
@@ -27,6 +28,8 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-svelte3": "^4.0.0",
     "firebase-tools": "^11.27.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^13.2.1",
     "postcss": "^8.4.21",
     "prettier": "^2.8.0",
     "prettier-plugin-svelte": "^2.8.1",
@@ -44,5 +47,11 @@
     "firebase": "^9.19.1",
     "firebase-admin": "^11.6.0",
     "highlight.js": "^11.7.0"
+  },
+  "lint-staged": {
+    "*.{js,ts,css,md,svelte,html,json}": [
+      "prettier --plugin-search-dir . --write",
+      "git add"
+    ]
   }
 }
