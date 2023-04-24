@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { browser } from '$app/environment';
 import { signInWithGoogle, subscribeToAuthState, signOut } from './services/auth';
 
 interface State {
@@ -9,13 +10,23 @@ interface State {
     displayName?: string;
     email?: string;
   };
+  wasAuthenticated: boolean;
   isLoading: boolean;
   loadingError?: string;
 }
 
 const initialValue: State = {
+  wasAuthenticated: getWasAuthenticated(),
   isLoading: false,
 };
+
+function getWasAuthenticated() {
+  return browser && localStorage.getItem('wasAuthenticated') === 'true';
+}
+
+function setWasAuthenticated(value: boolean) {
+  browser && localStorage.setItem('wasAuthenticated', value ? 'true' : 'false');
+}
 
 const dataStore = writable<State>(initialValue);
 
@@ -27,6 +38,7 @@ export const authStore = {
 
 subscribeToAuthState(user => {
   if (user) {
+    setWasAuthenticated(true);
     dataStore.update(current => ({
       ...current,
       user: {
@@ -38,6 +50,7 @@ subscribeToAuthState(user => {
       },
     }));
   } else {
+    setWasAuthenticated(false);
     dataStore.set(initialValue);
   }
 });

@@ -67,7 +67,7 @@
   }
 </script>
 
-{#if $authStore.user}
+{#if $authStore.user || $authStore.wasAuthenticated}
   <div>
     <!--    #region Mobile menu-->
     <div class="xl:hidden absolute top-0 inset-x-0 z-20 bg-gray-900 flex border-b border-white/5">
@@ -161,7 +161,7 @@
               <div
                 class="flex items-center gap-x-4 px-5 py-3 text-sm font-medium leading-6 text-white hover:bg-gray-800"
               >
-                {#if $authStore.user.photoURL}
+                {#if $authStore.user && $authStore.user.photoURL}
                   <img
                     class="h-10 w-10 rounded-full bg-gray-800"
                     src={$authStore.user.photoURL}
@@ -187,7 +187,7 @@
                   >
                 {/if}
                 <span class="sr-only">Your profile</span>
-                <span aria-hidden="true">{$authStore.user.title}</span>
+                <span aria-hidden="true">{$authStore.user?.title || 'Loading...'}</span>
 
                 <a
                   href="/"
@@ -218,7 +218,7 @@
 
     <div class="xl:pl-72">
       <main>
-        {#if $chatStore.selectedChat}
+        {#if $authStore.user && $chatStore.selectedChat}
           <div class="h-screen px-4 xl:px-10 pt-16 pb-6 xl:py-6 grid grid-rows-[1fr_auto] gap-4">
             <div class="messages-container overflow-hidden overflow-y-scroll space-y-4">
               {#if $chatStore.selectedChat.messages.length}
@@ -365,7 +365,8 @@
                       e.key === 'Enter' &&
                       !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) &&
                       submit()}
-                    on:input={e => (e.target.style.height = `${e.target.scrollHeight + 2}px`)}
+                    on:input={() =>
+                      (messageInput.style.height = `${messageInput.scrollHeight + 2}px`)}
                   />
 
                   <button
