@@ -13,6 +13,7 @@ import {
   limit,
   where,
   orderBy,
+  setDoc,
 } from 'firebase/firestore';
 import { firebaseApp } from './firebaseApp';
 import { env } from '$env/dynamic/public';
@@ -26,10 +27,19 @@ if (dev && env.PUBLIC_FIREBASE_USE_EMULATOR && !(db as any)._settingsFrozen) {
   connectFirestoreEmulator(db, 'localhost', 8080);
 }
 
+export function generateId(): string {
+  return doc(collection(db, 'fake_path')).id;
+}
+
 export async function add(path: string, data: any): Promise<string> {
   const col = collection(db, path);
   const ref = await addDoc(col, data);
   return ref.id;
+}
+
+export async function set(path: string, data: any): Promise<void> {
+  const ref = doc(db, path);
+  await setDoc(ref, data);
 }
 
 export async function update(path: string, data: any): Promise<void> {

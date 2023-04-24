@@ -101,9 +101,9 @@
             {#if $chatStore.isLoadingChats}
               <div class="animate-pulse flex space-x-4">
                 <div class="flex-1 space-y-4 py-1">
-                  <div class="h-4 bg-slate-700 rounded"></div>
-                  <div class="h-4 bg-slate-700 rounded"></div>
-                  <div class="h-4 bg-slate-700 rounded"></div>
+                  <div class="h-4 bg-slate-700 rounded" />
+                  <div class="h-4 bg-slate-700 rounded" />
+                  <div class="h-4 bg-slate-700 rounded" />
                 </div>
               </div>
             {:else}
@@ -341,13 +341,13 @@
               {#if $chatStore.isCreatingMessage || $chatStore.selectedChat.isAnswering}
                 <div class="animate-pulse flex space-x-4 py-2 px-3 max-w-2xl mx-auto">
                   <div class="flex-1 space-y-3 py-1">
-                    <div class="h-5 bg-slate-700 rounded"></div>
-                    <div class="h-5 bg-slate-700 rounded"></div>
+                    <div class="h-5 bg-slate-700 rounded" />
+                    <div class="h-5 bg-slate-700 rounded" />
                   </div>
                 </div>
               {/if}
-              <div data-e2e="scroll-to-margin"></div>
-              <div bind:this={scrollToBottomOfMessages} data-e2e="scroll-to-target"></div>
+              <div data-e2e="scroll-to-margin" />
+              <div bind:this={scrollToBottomOfMessages} data-e2e="scroll-to-target" />
             </div>
 
             <div>
@@ -365,17 +365,33 @@
                       e.key === 'Enter' &&
                       !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) &&
                       submit()}
-                    on:input={e => e.target.style.height = `${e.target.scrollHeight + 2}px`}
-                    ></textarea>
+                    on:input={e => (e.target.style.height = `${e.target.scrollHeight + 2}px`)}
+                  />
 
                   <button
                     class="btn-primary shrink-0 w-16 sm:w-20 self-end"
                     disabled={!message || $chatStore.isCreatingMessage}
                   >
                     {#if $chatStore.isCreatingMessage}
-                      <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <svg
+                        class="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        />
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
                       </svg>
                     {:else}
                       <span>Send</span>

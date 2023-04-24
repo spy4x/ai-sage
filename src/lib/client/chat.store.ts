@@ -1,6 +1,6 @@
 import { derived, get, writable } from 'svelte/store';
-import { add, arrayUnion, update, subscribeToCollection, remove } from './services/db';
 import { authStore } from './auth.store';
+import { arrayUnion, generateId, remove, set, subscribeToCollection, update } from './services/db';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -91,8 +91,13 @@ function subscribeToChats(userId: string) {
 export const chatStore = {
   subscribe: viewStore.subscribe,
   create: async (title: string): Promise<void> => {
-    updateState({ isCreatingChat: true, creatingChatError: undefined });
     try {
+      const chatId = generateId();
+      updateState({
+        isCreatingChat: true,
+        creatingChatError: undefined,
+        selectedChatId: chatId,
+      });
       const chat: Partial<Chat> = {
         title,
         isAnswering: false,
@@ -100,12 +105,11 @@ export const chatStore = {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      const path = getChatsPath(userId);
-      const createdChatId = await add(path, chat);
+      const path = getChatIdPath(userId, chatId);
+      await set(path, chat);
       updateState({
         isCreatingChat: false,
         creatingChatError: undefined,
-        selectedChatId: createdChatId,
       });
     } catch (error: unknown) {
       if (error instanceof Error) {
