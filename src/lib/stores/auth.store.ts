@@ -1,15 +1,17 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
-import { signInWithGoogle, subscribeToAuthState, signOut } from './services/auth';
+import { signInWithGoogle, subscribeToAuthState, signOut } from '../services/auth';
+
+export interface UserState {
+  id: string;
+  title: string;
+  photoURL?: string;
+  displayName?: string;
+  email?: string;
+}
 
 interface State {
-  user?: {
-    id: string;
-    title: string;
-    photoURL?: string;
-    displayName?: string;
-    email?: string;
-  };
+  user?: UserState;
   wasAuthenticated: boolean;
   isLoading: boolean;
   loadingError?: string;

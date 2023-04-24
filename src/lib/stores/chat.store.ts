@@ -1,8 +1,8 @@
 import { derived, get, writable } from 'svelte/store';
 import { authStore } from './auth.store';
-import { arrayUnion, generateId, remove, set, subscribeToCollection, update } from './services/db';
+import { arrayUnion, generateId, remove, set, subscribeToCollection, update } from '../services/db';
 
-interface Message {
+export interface Message {
   role: 'user' | 'assistant';
   content: string;
   responseTime?: number;
@@ -90,8 +90,12 @@ function subscribeToChats(userId: string) {
 
 export const chatStore = {
   subscribe: viewStore.subscribe,
-  create: async (title: string): Promise<void> => {
+  create: async (title?: string): Promise<void> => {
     try {
+      const state = get(chatStore);
+      if (!title) {
+        title = `Chat #${state.chats.length + 1}`;
+      }
       const chatId = generateId();
       updateState({
         isCreatingChat: true,
@@ -117,10 +121,14 @@ export const chatStore = {
       }
     }
   },
-  message: async (chatId: string, content: string): Promise<void> => {
+  message: async (content: string): Promise<void> => {
     updateState({ isCreatingMessage: true, creatingMessageError: undefined });
     try {
-      const path = getChatIdPath(userId, chatId);
+      const state = get(chatStore);
+      if (!state.selectedChatId) {
+        return;
+      }
+      const path = getChatIdPath(userId, state.selectedChatId);
       const chatUpdate = {
         messages: arrayUnion({
           role: 'user',
