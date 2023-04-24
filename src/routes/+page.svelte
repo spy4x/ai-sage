@@ -51,6 +51,7 @@
       message = message.replace(/\n/g, '<br/>');
       chatStore.message(state.selectedChatId, message);
       message = '';
+      messageInput.style.height = '';
     }
   }
 
@@ -100,9 +101,9 @@
             {#if $chatStore.isLoadingChats}
               <div class="animate-pulse flex space-x-4">
                 <div class="flex-1 space-y-4 py-1">
-                  <div class="h-4 bg-slate-700 rounded" />
-                  <div class="h-4 bg-slate-700 rounded" />
-                  <div class="h-4 bg-slate-700 rounded" />
+                  <div class="h-4 bg-slate-700 rounded"></div>
+                  <div class="h-4 bg-slate-700 rounded"></div>
+                  <div class="h-4 bg-slate-700 rounded"></div>
                 </div>
               </div>
             {:else}
@@ -340,8 +341,8 @@
               {#if $chatStore.isCreatingMessage || $chatStore.selectedChat.isAnswering}
                 <div class="animate-pulse flex space-x-4 py-2 px-3 max-w-2xl mx-auto">
                   <div class="flex-1 space-y-3 py-1">
-                    <div class="h-5 bg-slate-700 rounded" />
-                    <div class="h-5 bg-slate-700 rounded" />
+                    <div class="h-5 bg-slate-700 rounded"></div>
+                    <div class="h-5 bg-slate-700 rounded"></div>
                   </div>
                 </div>
               {/if}
