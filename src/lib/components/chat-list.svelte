@@ -1,12 +1,13 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { chatStore, type Chat } from '../stores';
+  import { chatStore, menuStore, type Chat } from '../stores';
   import SidebarProfile from './sidebar-profile.svelte';
 
   const dispatch = createEventDispatcher();
 
   function select(chat: Chat) {
     dispatch('select', { chat });
+    menuStore.toggle(false);
   }
 </script>
 
