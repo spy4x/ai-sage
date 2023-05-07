@@ -25,8 +25,8 @@
 </script>
 
 {#if $chatStore.selectedChat && $authStore.user}
-  <div class="h-screen px-4 xl:px-10 pt-16 pb-6 xl:py-6 grid grid-rows-[1fr_auto] gap-4">
-    <div class="messages-container overflow-hidden overflow-y-scroll space-y-4">
+  <div class="h-dscreen px-4 xl:px-10 pt-16 pb-6 xl:py-6 grid grid-rows-[1fr_auto] gap-4">
+    <div class="messages-container overflow-hidden overflow-y-scroll space-y-4 pt-3">
       {#if $chatStore.selectedChat.messages.length}
         {#each $chatStore.selectedChat.messages as message, messageIndex}
           <ChatMessage user={$authStore.user} {message} {messageIndex} />
@@ -35,7 +35,7 @@
         <NoChatMessages />
       {/if}
       {#if $chatStore.isCreatingMessage || $chatStore.selectedChat.isAnswering}
-        <div class="animate-pulse flex space-x-4 py-2 px-3 max-w-2xl mx-auto">
+        <div class="animate-pulse flex space-x-4 p-3 max-w-2xl mx-auto">
           <div class="flex-1 space-y-3 py-1">
             <div class="h-5 bg-slate-700 rounded" />
             <div class="h-5 bg-slate-700 rounded" />

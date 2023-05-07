@@ -22,7 +22,10 @@
     </div>
   {:else}
     <button
-      on:click={void chatStore.create(`Chat #${$chatStore.chats.length + 1}`)}
+      on:click={() => {
+        void chatStore.create(`Chat #${$chatStore.chats.length + 1}`);
+        menuStore.toggle(false);
+      }}
       class="btn-secondary"
     >
       Create chat
@@ -32,7 +35,7 @@
     {:else}
       <li>
         <div class="text-xs font-medium leading-6 text-gray-400">Your chats</div>
-        <ul class="-mx-2 mt-2 space-y-1">
+        <ul class="mt-2 space-y-1">
           {#each $chatStore.chats as chat}
             <li>
               <button
@@ -44,7 +47,10 @@
                 <span class="truncate">{chat.title}</span>
 
                 <button
-                  on:click={void chatStore.remove(chat)}
+                  on:click={e => {
+                    e.stopPropagation();
+                    void chatStore.remove(chat);
+                  }}
                   class="ml-auto text-gray-400 hover:text-white"
                 >
                   <svg
@@ -65,7 +71,7 @@
       </li>
     {/if}
   {/if}
-  <li class="-mx-6 mt-auto">
+  <li class="mt-auto">
     <SidebarProfile />
   </li>
 </ul>

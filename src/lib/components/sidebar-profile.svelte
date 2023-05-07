@@ -2,9 +2,7 @@
   import { authStore } from '../stores';
 </script>
 
-<div
-  class="flex items-center gap-x-4 px-5 py-3 text-sm font-medium leading-6 text-white hover:bg-gray-800"
->
+<div class="flex items-center gap-x-4 py-3 text-sm font-medium leading-6 text-white">
   {#if $authStore.user && $authStore.user.photoURL}
     <img
       class="h-10 w-10 rounded-full bg-gray-800"

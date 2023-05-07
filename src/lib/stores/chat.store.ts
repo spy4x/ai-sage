@@ -31,7 +31,7 @@ interface State {
 
 const initialValue: State = {
   chats: [],
-  isLoadingChats: false,
+  isLoadingChats: true,
   isCreatingChat: false,
   isCreatingMessage: false,
 };
@@ -47,6 +47,9 @@ const viewStore = derived(dataStore, $data => {
 });
 
 function updateState(state: Partial<State>) {
+  if (Object.keys(state).length === 0) {
+    return;
+  }
   dataStore.update(current => ({
     ...current,
     ...state,
@@ -88,6 +91,25 @@ function subscribeToChats(userId: string) {
   );
 }
 
+function selectChatMutation(id?: string, exceptId?: string): Partial<State> {
+  const state = get(dataStore);
+  if (id) {
+    return { selectedChatId: id };
+  }
+  if (
+    state.selectedChatId &&
+    state.selectedChatId !== exceptId &&
+    state.chats.find(chat => chat.id === state.selectedChatId)
+  ) {
+    return {};
+  }
+  if (state.chats.length) {
+    return { selectedChatId: state.chats.find(chat => chat.id !== exceptId)?.id };
+  } else {
+    return { selectedChatId: undefined };
+  }
+}
+
 export const chatStore = {
   subscribe: viewStore.subscribe,
   create: async (title?: string): Promise<void> => {
@@ -100,7 +122,7 @@ export const chatStore = {
       updateState({
         isCreatingChat: true,
         creatingChatError: undefined,
-        selectedChatId: chatId,
+        ...selectChatMutation(chatId),
       });
       const chat: Partial<Chat> = {
         title,
@@ -147,9 +169,7 @@ export const chatStore = {
   },
   remove: async (chat: Chat): Promise<void> => {
     const path = getChatIdPath(userId, chat.id);
-    if (chat.id === get(chatStore).selectedChatId) {
-      chatStore.select(undefined);
-    }
+    updateState(selectChatMutation(undefined, chat.id));
     await remove(path);
   },
   removeMessage: async (chat: Chat, messageIndex: number): Promise<void> => {
@@ -162,8 +182,8 @@ export const chatStore = {
     };
     await update(path, chatUpdate);
   },
-  select: (chatId: undefined | string): void => {
-    updateState({ selectedChatId: chatId });
+  select: (chatId?: string): void => {
+    updateState(selectChatMutation(chatId));
   },
 };
 

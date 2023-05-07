@@ -19,7 +19,7 @@ interface State {
 
 const initialValue: State = {
   wasAuthenticated: getWasAuthenticated(),
-  isLoading: false,
+  isLoading: true,
 };
 
 function getWasAuthenticated() {
