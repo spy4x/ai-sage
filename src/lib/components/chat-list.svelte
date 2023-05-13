@@ -26,7 +26,7 @@
         void chatStore.create(`Chat #${$chatStore.chats.length + 1}`);
         menuStore.toggle(false);
       }}
-      class="btn-secondary"
+      class="btn-secondary hidden xl:inline-flex"
     >
       Create chat
     </button>
@@ -41,7 +41,7 @@
               <button
                 class="{chat.id === $chatStore.selectedChatId
                   ? 'bg-gray-800 text-white'
-                  : ''} w-full text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-medium"
+                  : ''} w-full text-gray-400 hover:text-white hover:bg-gray-800 group flex items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-medium"
                 on:click={() => select(chat)}
               >
                 <span class="truncate">{chat.title}</span>

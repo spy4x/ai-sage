@@ -18,7 +18,7 @@
   }
   .btn-secondary {
     @apply inline-flex w-full justify-center;
-    @apply rounded-md border border-orange-600 text-orange-600 px-3 py-2;
+    @apply rounded-md border border-orange-600 text-orange-600 px-3 py-2 h-10;
     @apply hover:opacity-80 focus:outline-offset-0 transition-opacity;
     @apply text-sm leading-6;
     @apply disabled:opacity-50;

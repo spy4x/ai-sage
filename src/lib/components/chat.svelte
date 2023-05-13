@@ -26,7 +26,7 @@
 
 {#if $chatStore.selectedChat && $authStore.user}
   <div class="h-dscreen px-4 xl:px-10 pt-16 pb-6 xl:py-6 grid grid-rows-[1fr_auto] gap-4">
-    <div class="messages-container overflow-hidden overflow-y-scroll space-y-4 pt-3">
+    <div class="messages-container overflow-y-scroll -mx-4 px-4 space-y-4 pt-3">
       {#if $chatStore.selectedChat.messages.length}
         {#each $chatStore.selectedChat.messages as message, messageIndex}
           <ChatMessage user={$authStore.user} {message} {messageIndex} />
