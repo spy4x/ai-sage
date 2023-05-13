@@ -20,7 +20,7 @@
   }
 
   function increaseOnTyping(): void {
-    messageInput.style.height = `${messageInput.scrollHeight + 2}px`;
+    messageInput.style.height = `${messageInput.scrollHeight}px`;
   }
 
   function submit(): void {
