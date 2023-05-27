@@ -38,7 +38,7 @@ interface Message {
 
 export const answer = functions
   .region('europe-west1')
-  .runWith({ maxInstances: 5 })
+  .runWith({ maxInstances: 5, timeoutSeconds: 300 })
   .firestore.document('users/{userId}/chats/{chatId}')
   .onUpdate(async (snapshot, context) => {
     const chat = snapshot.after.data();

@@ -44,6 +44,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@google-cloud/functions-framework": "^3.2.0",
     "firebase": "^9.19.1",
     "firebase-admin": "^11.6.0",
     "highlight.js": "^11.7.0"
