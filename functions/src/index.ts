@@ -1,170 +1,168 @@
 import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
 import { FieldValue, Firestore } from '@google-cloud/firestore';
-import { Configuration, OpenAIApi } from 'openai';
-import { marked } from 'marked';
-import hljs from 'highlight.js';
 
-// #region Config
-const apiKey = process.env.OPENAI_API_KEY;
-const configuration = new Configuration({ apiKey });
-const openai = new OpenAIApi(configuration);
+import { MessageSchema, ChatSchema } from '../../src/lib/shared/types';
+import type { Message, Chat } from '../../src/lib/shared/types';
+import { z } from 'zod';
+import { chatgpt } from './chatgpt';
 
 const db = new Firestore();
 
-// code highlighting
-marked.setOptions({
-  highlight: function (code, language) {
-    if (!language) return code;
-    return hljs.highlight(code, { language }).value;
-  },
+const FIRESTORE_DOC_ID_LENGTH = 20;
+const RequestSchema = z.object({
+  chatId: z.string().length(FIRESTORE_DOC_ID_LENGTH),
 });
-// #endregion
 
-interface Message {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  responseTime?: number;
-  isFlagged?: boolean;
-}
-
-// interface Chat {
-//   id: string;
-//   title: string;
-//   isAnswering: boolean;
-//   messages: Message[];
-//   createdAt: Date;
-//   updatedAt: Date;
-// }
-
-export const answer = functions
+export const api = functions
   .region('europe-west1')
-  .runWith({ maxInstances: 5 })
-  .firestore.document('users/{userId}/chats/{chatId}')
-  .onUpdate(async (snapshot, context) => {
-    const chat = snapshot.after.data();
-    const { userId, chatId } = context.params;
+  .runWith({ maxInstances: 5, timeoutSeconds: 150 })
+  .https.onRequest(async (request, response) => {
+    let chatId = '';
+    let userId = '';
+    let jwt = '';
+    let chat: undefined | Chat = undefined;
+    let message: undefined | Message = undefined;
 
-    // #region Checks for early exit
-    const messagesBefore: Message[] = snapshot.before.data().messages;
-    const messagesAfter: Message[] = chat.messages;
-    if (!messagesAfter.length) {
+    // #region Authorization
+    // get jwt from authorization header
+    const authHeader = request.headers.authorization;
+    if (!authHeader) {
+      response.status(401).send('No authorization header provided with bearer token.');
       return;
     }
-    const isMessagesAmountSame = messagesBefore.length === messagesAfter.length;
-    const isLastMessageFromAssistant = messagesAfter[messagesAfter.length - 1].role === 'assistant';
-    if (isMessagesAmountSame || isLastMessageFromAssistant) {
+    // parse JWT using Firebase Admin SDK
+    jwt = authHeader.includes('Bearer ') ? authHeader.split(' ')[1] : '';
+    if (!jwt) {
+      response.status(401).send('No JWT provided in authorization header. Format: "Bearer <JWT>"');
       return;
     }
+    const decodedToken = await admin.auth().verifyIdToken(jwt);
+    userId = decodedToken.uid;
+    // #endregion Authorization
+
+    // #region Parse request
+    try {
+      ({ chatId } = RequestSchema.parse(request.query));
+      message = MessageSchema.parse(request.body);
+    } catch (error: unknown) {
+      if (error instanceof z.ZodError) {
+        response.status(400).json({
+          code: 'validation',
+          message: 'Invalid request',
+          errors: error.errors,
+        });
+      }
+    }
+    // #endregion Parse request
+
+    // #region Fetch chat
+    try {
+      const chatSnapshot = await db
+        .collection('users')
+        .doc(userId)
+        .collection('chats')
+        .doc(chatId)
+        .get();
+      if (!chatSnapshot.exists) {
+        response.status(404).send('Chat not found');
+        return;
+      }
+      chat = ChatSchema.parse({ ...chatSnapshot.data(), id: chatSnapshot.id });
+    } catch (error: unknown) {
+      console.error(error);
+      if (error instanceof z.ZodError) {
+        response.status(400).json({
+          code: 'validation',
+          message: 'Invalid chat',
+          errors: error.errors,
+        });
+      }
+      response.status(500).send('Internal server error');
+    }
+    // #endregion Fetch chat
+
+    if (!chat || !message) {
+      response.status(500).send('Internal server error');
+      return;
+    }
+
     // exit if any message is flagged
-    const isAnyMessageFlagged = messagesAfter.some(message => message.isFlagged);
+    const isAnyMessageFlagged = chat.messages.some(message => message.isFlagged);
     if (isAnyMessageFlagged) {
+      response.status(403).send('Chat is flagged');
       return;
     }
-
-    // user is not awaiting answer. Maybe just a message was deleted or something.
-    if (!chat.isAnswering) {
-      return;
-    }
-    // #endregion
 
     try {
-      const { content, title, responseTime, isFlagged } = await sage(messagesAfter, userId);
-      await saveAnswer(
-        userId,
-        chatId,
-        content,
-        responseTime,
-        chat,
-        title,
-        isFlagged,
-        messagesAfter,
-      );
+      const messages = [...chat.messages, message];
+      const { content, title, responseTime, isFlagged } = await chatgpt(messages, userId);
+      await saveAnswer(userId, chatId, content, responseTime, chat, title, isFlagged, messages);
+      response.sendStatus(200);
     } catch (error: unknown) {
       if ((error as any).isAxiosError) {
         console.error((error as any).response.data);
       } else {
         console.error(error);
       }
+      response.status(500).send('Internal server error');
     }
   });
 
-async function chatGPT(messages: Message[], userId: string) {
-  const response = await openai.createChatCompletion({
-    model: 'gpt-3.5-turbo',
-    messages,
-    user: userId,
-  });
-  const message = response.data.choices[0].message;
-  if (!message) {
-    throw new Error('No answer from OpenAI:' + JSON.stringify(response.data, null, 4));
-  }
-  return message.content;
-}
+// export const answer = functions
+//   .region('europe-west1')
+//   .runWith({ maxInstances: 5, timeoutSeconds: 150 })
+//   .firestore.document('users/{userId}/chats/{chatId}')
+//   .onUpdate(async (snapshot, context) => {
+//     const chat = snapshot.after.data();
+//     const { userId, chatId } = context.params;
 
-async function sage(
-  messages: Message[],
-  userId: string,
-): Promise<{
-  content: string;
-  title: string;
-  responseTime: number;
-  isFlagged: boolean;
-}> {
-  const startTime = Date.now();
-  const validationResponse = await openai.createModeration({
-    input: messages[messages.length - 1].content,
-  });
-  const validation = validationResponse.data.results[0];
-  if (validation.flagged) {
-    return {
-      content: `⚠️ Your message was flagged as inappropriate. Please try to rephrase it.`,
-      title: '',
-      responseTime: Date.now() - startTime,
-      isFlagged: true,
-    };
-  }
-  const [content, title] = await Promise.all([
-    generateAnswer(messages, userId),
-    generateTitle(messages, userId),
-  ]);
-  const responseTime = Date.now() - startTime;
-  return { content, title, responseTime, isFlagged: false };
-}
+//     // #region Checks for early exit
+//     const messagesBefore: Message[] = snapshot.before.data().messages;
+//     const messagesAfter: Message[] = chat.messages;
+//     if (!messagesAfter.length) {
+//       return;
+//     }
+//     const isMessagesAmountSame = messagesBefore.length === messagesAfter.length;
+//     const isLastMessageFromAssistant = messagesAfter[messagesAfter.length - 1].role === 'assistant';
+//     if (isMessagesAmountSame || isLastMessageFromAssistant) {
+//       return;
+//     }
 
-async function generateAnswer(messages: Message[], userId: string): Promise<string> {
-  // TODO: calculate tokens and cut off older messages
-  const answer = await chatGPT(
-    [
-      {
-        role: 'system',
-        content:
-          'You are ChatGPT, a useful assistant. You answer using Markdown code. If you need to write programming code snippets - use correct Markdown format, like ```javascript alert("Hello World!") ```. That will make UI to render your answer nicely.',
-      },
-      ...messages.map(message => ({ role: message.role, content: message.content })),
-    ],
-    userId,
-  );
-  console.log('answer before markdown', answer);
-  return marked(answer);
-}
+//     // user is not awaiting answer. Maybe just a message was deleted or something.
+//     if (!chat.isAnswering) {
+//       return;
+//     }
+//     // #endregion
 
-async function generateTitle(messages: Message[], userId: string): Promise<string> {
-  const isFirstMessage = messages.length === 1;
-  if (!isFirstMessage) {
-    return '';
-  }
-  return chatGPT(
-    [
-      {
-        role: 'user',
-        content: `Summarize text into max 5 words. No quotes or special characters. Text:"""
-${messages[0].content}
-"""`,
-      },
-    ],
-    userId,
-  );
-}
+//     try {
+//       const { content, title, responseTime, isFlagged } = await sage(messagesAfter, userId);
+//       await saveAnswer(
+//         userId,
+//         chatId,
+//         content,
+//         responseTime,
+//         chat,
+//         title,
+//         isFlagged,
+//         messagesAfter,
+//       );
+//     } catch (error: unknown) {
+//       if ((error as any).isAxiosError) {
+//         console.error((error as any).response.data);
+//       } else {
+//         console.error(error);
+//       }
+//     }
+//   });
+
+// async function dalleVariations(imageURL: string, userId: string): Promise<string[]> {
+//   const downloadImageResponse = await fetch(imageURL);
+//   const blob = await downloadImageResponse.blob();
+
+//   const response = await openai.createImageVariation(blob as any, 4, '1024x1024', userId);
+//   return response.data.data.map(image => image.url!);
+// }
 
 async function saveAnswer(
   userId: string,

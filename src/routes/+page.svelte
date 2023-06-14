@@ -1,12 +1,7 @@
 <script lang="ts">
-  import { SignIn, NoChats, ChatList, Chat } from '$lib/components';
-  import { authStore, chatStore, type Chat as ChatType } from '$lib/stores';
-
-  let isMobileMenuOpen = false;
-
-  function toggle() {
-    isMobileMenuOpen = !isMobileMenuOpen;
-  }
+  import { SignIn, NoChats, ChatList, Chat } from '@components';
+  import { authStore, chatStore, menuStore } from '@stores';
+  import type { Chat as ChatType } from '@types';
 
   function select(chat: ChatType) {
     chatStore.select(chat.id);
@@ -22,7 +17,7 @@
 {#if $authStore.user || $authStore.wasAuthenticated}
   <!-- #region Mobile menu-->
   <div class="xl:hidden absolute top-0 inset-x-0 z-20 bg-gray-900 flex border-b border-white/5">
-    <button on:click={toggle} type="button" class="p-5">
+    <button on:click={() => menuStore.toggle()} type="button" class="p-5">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         class="h-6 w-6"
@@ -38,7 +33,7 @@
   <!-- #endregion Mobile menu-->
 
   <aside
-    class="{isMobileMenuOpen
+    class="{$menuStore.isMobileMenuOpen
       ? 'fixed inset-0 z-10 bg-gray-900 pt-16 h-screen overflow-y-scroll flex flex-col'
       : 'hidden'}
     xl:p-0 xl:bg-transparent xl:fixed xl:inset-y-0 xl:z-50 xl:flex xl:w-72 xl:flex-col"

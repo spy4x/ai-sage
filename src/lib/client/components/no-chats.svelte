@@ -1,5 +1,5 @@
 <script>
-  import { chatStore } from '../stores';
+  import { chatStore } from '@stores';
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 

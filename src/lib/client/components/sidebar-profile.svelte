@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { authStore } from '../stores';
+  import { authStore } from '@stores';
 </script>
 
 <div
