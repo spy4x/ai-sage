@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { chatStore } from '$lib/stores';
+  import { chatStore } from '@stores';
   import { createEventDispatcher } from 'svelte';
 
   let message = '';

@@ -1,22 +1,7 @@
 import { derived, get, writable } from 'svelte/store';
 import { authStore } from './auth.store';
-import { arrayUnion, generateId, remove, set, subscribeToCollection, update } from '../services/db';
-
-export interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  responseTime?: number;
-  isFlagged: boolean;
-}
-
-export interface Chat {
-  id: string;
-  isAnswering: boolean;
-  title: string;
-  messages: Message[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { arrayUnion, generateId, remove, set, subscribeToCollection, update } from '@services/db';
+import type { Chat } from '@types';
 
 interface State {
   chats: Chat[];

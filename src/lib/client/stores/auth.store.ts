@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
-import { signInWithGoogle, subscribeToAuthState, signOut } from '../services/auth';
+import { signInWithGoogle, subscribeToAuthState, signOut } from '@services/auth';
 
 export interface UserState {
   id: string;

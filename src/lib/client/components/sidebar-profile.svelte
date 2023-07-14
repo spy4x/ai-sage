@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { authStore } from '../stores';
+  import { authStore } from '@stores';
 </script>
 
 <div class="flex items-center gap-x-4 py-3 text-sm font-medium leading-6 text-white">

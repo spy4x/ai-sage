@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { SignIn, NoChats, ChatList, Chat } from '$lib/components';
-  import { authStore, chatStore, menuStore, type Chat as ChatType } from '$lib/stores';
+  import { SignIn, NoChats, ChatList, Chat } from '@components';
+  import { authStore, chatStore, menuStore } from '@stores';
+  import type { Chat as ChatType } from '@types';
 
   function select(chat: ChatType) {
     chatStore.select(chat.id);

@@ -3,7 +3,7 @@
   import Submit from './submit.svelte';
   import NoChatMessages from './no-chat-messages.svelte';
   import ChatMessage from './chat-message.svelte';
-  import { chatStore, authStore } from '../stores';
+  import { chatStore, authStore } from '@stores';
 
   const dispatch = createEventDispatcher();
   let scrollToBottomOfMessages: HTMLDivElement;

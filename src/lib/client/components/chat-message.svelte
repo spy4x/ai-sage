@@ -19,8 +19,9 @@
 
 <script lang="ts">
   // Code in this <script> tag is executed for each instance of this component
-  import { chatStore } from '$lib/stores';
-  import type { Message, UserState } from '$lib/stores';
+  import { chatStore } from '@stores';
+  import type { UserState } from '@stores';
+  import type { Message } from '@types';
 
   export let message: Message;
   export let messageIndex: number;

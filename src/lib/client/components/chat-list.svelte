@@ -1,7 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { chatStore, menuStore, type Chat } from '../stores';
+  import { chatStore, menuStore } from '../stores';
   import SidebarProfile from './sidebar-profile.svelte';
+  import type { Chat } from '@types';
 
   const dispatch = createEventDispatcher();
 
